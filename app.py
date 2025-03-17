@@ -2,49 +2,36 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import io
 
-st.title("Random Time Series Generator")
+st.title("This is a test app")
+st.write("This is a simulation for a random time series graph.")
 
-# Initialize session state for storing the time series data
-if "time_series_data" not in st.session_state:
-    st.session_state.time_series_data = None
-    st.session_state.graph_generated = False
+# Session state to track button clicks
+if 'data' not in st.session_state:
+    st.session_state.data = None
+if 'button_one_clicked' not in st.session_state:
+    st.session_state.button_one_clicked = False
 
-# Function to generate random time series data
 def generate_time_series():
-    dates = pd.date_range(start="2023-01-01", periods=100, freq="D")
-    values = np.cumsum(np.random.randn(100))  # Creates a random walk series
-    df = pd.DataFrame({"Date": dates, "Value": values})
+    """Generate a random time series dataset."""
+    timestamps = pd.date_range(start=pd.Timestamp.now(), periods=50, freq='H')
+    values = np.random.randn(50).cumsum()
+    df = pd.DataFrame({'Timestamp': timestamps, 'Value': values})
     return df
 
-# Button to generate the graph
-if st.button("Generate Time Series Graph"):
-    st.session_state.time_series_data = generate_time_series()
-    st.session_state.graph_generated = True
+if st.button("Generate Time Series"):
+    st.session_state.data = generate_time_series()
+    st.session_state.button_one_clicked = True
+    st.experimental_rerun()
 
-# Display the graph if data exists
-if st.session_state.graph_generated and st.session_state.time_series_data is not None:
-    fig, ax = plt.subplots(figsize=(10, 5))  # Added figsize for better visibility
-    ax.plot(
-        st.session_state.time_series_data["Date"],
-        st.session_state.time_series_data["Value"],
-        marker="o",
-        linestyle="-",
-        color="b",
-    )
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Value")
-    ax.set_title("Random Time Series Graph")
-    ax.grid(True)  # Adds grid for better readability
-    st.pyplot(fig)  # Display the graph
-
-    # Convert DataFrame to CSV
-    csv_data = st.session_state.time_series_data.to_csv(index=False).encode("utf-8")
+if st.session_state.button_one_clicked and st.session_state.data is not None:
+    st.line_chart(st.session_state.data.set_index("Timestamp"))
     
-    # Download button
+    csv = st.session_state.data.to_csv(index=False)
     st.download_button(
         label="Download CSV",
-        data=csv_data,
-        file_name="time_series.csv",
-        mime="text/csv",
+        data=csv,
+        file_name="time_series_data.csv",
+        mime="text/csv"
     )
